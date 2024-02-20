@@ -1,0 +1,2 @@
+class SteamHTTPCodeError(Exception):
+    pass

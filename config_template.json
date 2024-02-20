@@ -1,0 +1,3 @@
+{"accounts": [
+    {"username": "xxxx", "password": "xxxx", "api_key": "xxxx", "steamguard": {"shared_secret": "xxxx", "identity_secret": "xxxx", "steamid": "xxxx"}}
+]}

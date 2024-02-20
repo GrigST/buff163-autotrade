@@ -1,0 +1,5 @@
+git+https://github.com/bukson/steampy.git
+cryptography
+pkcs7
+requests[socks]
+lxml
