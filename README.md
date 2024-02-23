@@ -58,11 +58,17 @@ Rename `config_template.json` to `config.json`
             "process_sell_offers": true,
             "process_buy_offers": true
         }
-    ]
+    ],
+    "notifiers": {
+        "telegram_bot": {
+            "token": "Your telegram bot token",
+            "whitelist": [123456789]
+        }
+    }
 }
 ```
 
-`proxy`, `process_sell_offers` and `process_buy_offers` are optional parameters.
+`proxy`, `process_sell_offers`, `process_buy_offers` and `notifiers` are optional parameters.
 
 [Click here to get steam api key](https://steamcommunity.com/dev/apikey)
 (Enter "localhost" in the domain field)
@@ -80,3 +86,28 @@ or use [Steam Desktop Authenticator](https://github.com/Jessecar96/SteamDesktopA
 - `-f`, `--force-login` - Force login all accounts
 - `-s`, `--check-sessions` - Check if accounts are logged in and exit
 - `-r REFRESH_PERIOD`, `--refresh-period REFRESH_PERIOD` - Buff trades check period
+- `--notify-test` - Test notifications
+
+## Notifiers
+
+Notifiers let you know when something has gone wrong and an exception has occurred.
+
+### Telegram bot notifier
+
+How to install telegram bot notificator:
+
+1. Create new bot using [BotFather](https://t.me/BotFather)
+
+    Enter `/newbot` command, set name and username for your bot and
+    paste the token into the config file.
+
+2. Setup the whitelist
+
+    1. Leave the whitelist empty and run app.
+    2. Go to the bot you created and enter the `/getid` command.
+    3. Insert the user ID into the whitelist.
+
+3. Test the notifier
+
+    Stop the application and run it again with the `--notify-test` argument.
+    You should receive a `Test notification` message from your bot.
