@@ -191,6 +191,9 @@ class Buff163Autotrade:
 
     def load_notifiers(self):
         self.notifiers = []
+        if not self.config.get('notifiers', None):
+            return
+
         if 'telegram_bot' in self.config['notifiers']:
             from notifiers.telegram_bot_notifier import TelegramBotNotifier
             notifier = TelegramBotNotifier(self.config['notifiers']['telegram_bot'])
