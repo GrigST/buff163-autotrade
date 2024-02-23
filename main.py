@@ -15,13 +15,14 @@ class Account(Thread):
     EXCEPTION_TIMEOUT = 120
 
     def __init__(self, account_cfg, cookies: RequestsCookieJar, steam: AdvancedSteamClient,
-                 buff: Buff163Client, refresh_period: int):
+                 buff: Buff163Client, refresh_period: int, notifiers=None):
         self._account_cfg = account_cfg
         self.username = self._account_cfg['username']
         self.cookies = cookies
         self.steam = steam
         self.buff = buff
         self.refresh_period = refresh_period
+        self.notifiers = notifiers
         super().__init__(name=self.username, daemon=True)
         self.last_exception = 0
         self.known_ids = set()
@@ -124,21 +125,28 @@ class Account(Thread):
                 self.mainloop()
 
             except:
-                print(f'[{self.username}] An exception occured')
-                if time() - self.last_exception < self.EXCEPTION_TIMEOUT:
-                    raise
+                try:
+                    print(f'[{self.username}] An exception occured')
+                    if time() - self.last_exception < self.EXCEPTION_TIMEOUT:
+                        raise
 
-                else:
-                    traceback.print_exc()
-                    self.last_exception = time()
+                    else:
+                        traceback.print_exc()
+                        self.last_exception = time()
 
-                self.login()
+                    self.login()
+
+                except Exception as e:
+                    if self.notifiers:
+                        for notifier in self.notifiers:
+                            notifier.notify_exception(self.username, e)
 
 
 class Buff163Autotrade:
     def __init__(self):
         self.parse_args()
         self.load_config()
+        self.load_notifiers()
         self.accounts = {account['username']: Account(account, cookie_jar := RequestsCookieJar(),
                          AdvancedSteamClient(account, cookie_jar),
                          Buff163Client(account, cookie_jar),
@@ -165,6 +173,7 @@ class Buff163Autotrade:
         parser.add_argument('-f', '--force-login', action='store_true', dest='force_login', help='Force login all accounts')
         parser.add_argument('-s', '--check-sessions', action='store_true', dest='check_sessions', help='Check if accounts are logged in and exit')
         parser.add_argument('-r', '--refresh-period', action='store', dest='refresh_period', default=30, help='Buff trades refresh period', type=int)
+        parser.add_argument('--notify-test', action='store_true', dest='notify_test', help='Test notifications')
         self.args = parser.parse_args()
         self.config_path: str = self.args.config
         self.cookies_path: str = self.args.cookies
@@ -173,11 +182,24 @@ class Buff163Autotrade:
         self.force_login: bool = self.args.force_login
         self.check_sessions: bool = self.args.check_sessions
         self.refresh_period: int = self.args.refresh_period
+        self.notify_test: bool = self.args.notify_test
         return self.args
     
     def load_config(self):
         with open(self.config_path, 'r') as f:
             self.config = json.load(f)
+
+    def load_notifiers(self):
+        self.notifiers = []
+        if 'telegram_bot' in self.config['notifiers']:
+            from notifiers.telegram_bot_notifier import TelegramBotNotifier
+            notifier = TelegramBotNotifier(self.config['notifiers']['telegram_bot'])
+            self.notifiers.append(notifier)
+            notifier.start()
+
+    def test_notifiers(self):
+        for notifier in self.notifiers:
+            notifier.notify_test()
 
     def start_all(self):
         for account in self.accounts.values():
@@ -198,6 +220,10 @@ if __name__ == '__main__':
     autotrade = Buff163Autotrade()
     if autotrade.check_sessions:
         autotrade.check_all_sessions()
+        exit(0)
+
+    if autotrade.notify_test:
+        autotrade.test_notifiers()
         exit(0)
 
     atexit.register(autotrade.cookies_manager.save)
