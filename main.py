@@ -13,6 +13,7 @@ from buff163.client import Buff163Client
 
 class Account(Thread):
     EXCEPTION_TIMEOUT = 120
+    RETRY_FAIL_DELAY = 1800
 
     def __init__(self, account_cfg, cookies: RequestsCookieJar, steam: AdvancedSteamClient,
                  buff: Buff163Client, refresh_period: int, notifiers=None):
@@ -141,6 +142,8 @@ class Account(Thread):
                         for notifier in self.notifiers:
                             notifier.notify_exception(self.username, e)
 
+                    sleep(self.RETRY_FAIL_DELAY)
+
 
 class Buff163Autotrade:
     def __init__(self):
@@ -150,7 +153,7 @@ class Buff163Autotrade:
         self.accounts = {account['username']: Account(account, cookie_jar := RequestsCookieJar(),
                          AdvancedSteamClient(account, cookie_jar),
                          Buff163Client(account, cookie_jar),
-                         refresh_period=self.refresh_period)
+                         refresh_period=self.refresh_period, notifiers=self.notifiers)
                          for account in self.config['accounts']}
         
         self.cookies_manager = CookieManager(self.cookies_path,
