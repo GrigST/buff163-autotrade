@@ -29,7 +29,6 @@ class Account(Thread):
         self.known_ids = set()
         self.accepted_trade_ids = set()
         self.confirmed_trade_ids = set()
-        self.ids_to_send_trade = []
 
     def login(self, force=False):
         self.steam.login(force=force)
@@ -50,37 +49,38 @@ class Account(Thread):
         
         self.steam._confirm_transaction(tradeofferid)
         self.confirmed_trade_ids.add(tradeofferid)
+        print(f'[{self.username}] Confirmed trade {tradeofferid}')
 
     def check_to_deliver(self, notifications):
+        ids_to_send_trade = []
         for game, count in notifications['to_deliver_order'].items():
             if count == 0:
                 continue
 
             data = self.buff.get_items_to_deliver(game)
             for item in data['items']:
-                if item['is_seller_asked_to_send_offer'] and item['state'] == 'DELIVERING':
+                if item['state'] == 'DELIVERING':
                     self.confirm_trade(item['tradeofferid'])
 
                 if item['id'] in self.known_ids:
                     continue
 
-                self.known_ids.add(item['id'])
-
-                if item['is_seller_asked_to_send_offer']:
+                if item['state'] == 'TO_DELIVER':
                     if not item['has_sent_offer']:
-                        self.ids_to_send_trade.append(item['id'])
+                        ids_to_send_trade.append(item['id'])
 
                 else:
                     self.accept_trade(item['tradeofferid'])
 
-        if len(self.ids_to_send_trade) > 0:
+        if len(ids_to_send_trade) > 0:
             print(f'[{self.username}] Sending trade offer to buyer')
-            self.buff.send_trade_offers('seller', self.ids_to_send_trade)
+            self.buff.send_trade_offers('seller', ids_to_send_trade)
             print(f'[{self.username}] Success')
 
-        self.ids_to_send_trade.clear()
+        self.known_ids.update(ids_to_send_trade)
 
     def check_to_send_offer(self, notifications):
+        ids_to_send_trade = []
         for game, count in notifications['to_send_offer_order'].items():
             if count == 0:
                 continue
@@ -90,17 +90,15 @@ class Account(Thread):
                 if item['id'] in self.known_ids:
                     continue
 
-                self.known_ids.add(item['id'])
-
                 if not item['is_seller_asked_to_send_offer'] and not item['has_sent_offer']:
-                    self.ids_to_send_trade.append(item['id'])
+                    ids_to_send_trade.append(item['id'])
 
-        if len(self.ids_to_send_trade) > 0:
+        if len(ids_to_send_trade) > 0:
             print(f'[{self.username}] Sending trade offer to seller')
-            self.buff.send_trade_offers('buyer', self.ids_to_send_trade)
+            self.buff.send_trade_offers('buyer', ids_to_send_trade)
             print(f'[{self.username}] Success')
 
-        self.ids_to_send_trade.clear()
+        self.known_ids.update(ids_to_send_trade)
 
     def check_to_accept_offers(self, notifications):
         if sum(notifications['to_accept_offer_order'].values()) > 0:
