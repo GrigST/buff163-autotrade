@@ -46,6 +46,7 @@ Rename `config_template.json` to `config.json`
 {
     "accounts": [
         {
+            "enabled": true, // optional, default: true
             "username": "Your steam username",
             "password": "Your steam password",
             "api_key": "You steam api key",
@@ -54,12 +55,12 @@ Rename `config_template.json` to `config.json`
                 "identity_secret": "Your identity secret",
                 "steamid": "Your steamid"
             },
-            "proxy": "socks5://user:pass@ip:port",
-            "process_sell_offers": true,
-            "process_buy_offers": true
+            "proxy": "socks5://user:pass@ip:port", // optional, default: null
+            "process_sell_offers": true, // optional, default: true
+            "process_buy_offers": true // optional, default: true
         }
     ],
-    "notifiers": {
+    "notifiers": { // optional
         "telegram_bot": {
             "token": "Your telegram bot token",
             "whitelist": [123456789]
@@ -67,8 +68,6 @@ Rename `config_template.json` to `config.json`
     }
 }
 ```
-
-`proxy`, `process_sell_offers`, `process_buy_offers` and `notifiers` are optional parameters.
 
 [Click here to get steam api key](https://steamcommunity.com/dev/apikey)
 (Enter "localhost" in the domain field)
