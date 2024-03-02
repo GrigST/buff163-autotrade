@@ -152,7 +152,7 @@ class Buff163Autotrade:
                          AdvancedSteamClient(account, cookie_jar),
                          Buff163Client(account, cookie_jar),
                          refresh_period=self.refresh_period, notifiers=self.notifiers)
-                         for account in self.config['accounts']}
+                         for account in self.config['accounts'] if account.get('enabled', True)}
         
         self.cookies_manager = CookieManager(self.cookies_path,
                                              {username: account.cookies
