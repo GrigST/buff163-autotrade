@@ -30,7 +30,8 @@ class TelegramBotNotifier(BaseThreadedNotifier):
                 print(f'Failed to send notification to user {user}: {e}')
 
     def notify_exception(self, username, exception):
-        self.notify(f'An exception occurred with a user {username}: {exception}')
+        exception_str = str(exception)
+        self.notify(f'An exception occurred with a user {username}: {exception.__class__.__name__}{": " + exception_str if exception_str else ""}')
 
     def notify_test(self):
         self.notify('Test notification')
