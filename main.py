@@ -59,13 +59,14 @@ class Account(Thread):
 
             data = self.buff.get_items_to_deliver(game)
             for item in data['items']:
-                if item['state'] == 'DELIVERING':
+                need_send_offer = item['is_seller_asked_to_send_offer'] or item['type'] == 2
+                if need_send_offer and item['state'] == 'DELIVERING':
                     self.confirm_trade(item['tradeofferid'])
 
                 if item['id'] in self.known_ids:
                     continue
 
-                if item['state'] == 'TO_DELIVER':
+                if need_send_offer:
                     if not item['has_sent_offer']:
                         ids_to_send_trade.append(item['id'])
 
